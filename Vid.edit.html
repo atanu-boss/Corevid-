@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Video Editor Pro | Like CapCut Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6C5CE7;
+            --primary-dark: #5649C7;
+            --accent: #FD79A8;
+            --dark: #1E1E2E;
+            --light: #F5F6FA;
+            --panel: #FFFFFF;
+            --panel-dark: #2D2D3A;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --glass: rgba(255, 255, 255, 0.85);
+            --glass-dark: rgba(45, 45, 58, 0.85);
+        }
+
+        /* Modern Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background: var(--dark);
+            color: var(--light);
+        }
+
+        /* Glassmorphism Effect */
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .dark-mode .glass-card {
+            background: var(--glass-dark);
+            border: 1px solid rgba(0, 0, 0, 0.2);
+        }
+
+        /* Main Layout */
+        .editor-container {
+            display: grid;
+            grid-template-columns: 80px 1fr 350px;
+            height: 100vh;
+            gap: 1rem;
+            padding: 1rem;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1200px) {
+            .editor-container {
+                grid-template-columns: 60px 1fr;
+            }
+            .right-panel {
+                position: fixed;
+                right: -100%;
+                top: 0;
+                width: 90%;
+                height: 100vh;
+                z-index: 1000;
+                transition: right 0.3s;
+            }
+            .right-panel.active {
+                right: 0;
+            }
+        }
+
+        /* Left Toolbar */
+        .toolbar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem 0.5rem;
+        }
+
+        .tool-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 1.2rem;
+            color: var(--dark);
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dark-mode .tool-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+        }
+
+        .tool-btn:hover, .tool-btn.active {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        /* Center Preview + Timeline */
+        .preview-area {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .video-preview {
+            aspect-ratio: 16/9;
+            background: black;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .timeline {
+            height: 120px;
+            background: var(--panel);
+            border-radius: 12px;
+            position: relative;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 10px;
+        }
+
+        .dark-mode .timeline {
+            background: var(--panel-dark);
+        }
+
+        /* Right Panel - AI Tools */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .panel-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 0 1rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .dark-mode .tab-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* AI Feature Cards */
+        .ai-feature {
+            padding: 1rem;
+            border-radius: 12px;
+            background: rgba(108, 92, 231, 0.1);
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-feature.premium::after {
+            content: "PRO";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--accent);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .ai-feature h3 {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-feature p {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 1rem;
+        }
+
+        .ai-feature-btn {
+            width: 100%;
+            padding: 0.7rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .ai-feature-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .ai-feature-btn.premium {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .primary-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .secondary-btn {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--dark);
+        }
+
+        .dark-mode .secondary-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+        }
+
+        .secondary-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+                padding: 0.5rem;
+            }
+            .toolbar {
+                flex-direction: row;
+                padding: 0.5rem;
+                overflow-x: auto;
+            }
+            .tool-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar glass-card">
+        <div class="logo">
+            <i class="fas fa-magic"></i>
+            <span>AI Editor Pro</span>
+        </div>
+        <div class="action-buttons">
+            <button class="action-btn secondary-btn" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="action-btn secondary-btn" id="exportBtn">
+                <i class="fas fa-download"></i> Export
+            </button>
+            <button class="action-btn primary-btn" id="upgradeBtn">
+                <i class="fas fa-crown"></i> Upgrade to Pro
+            </button>
+        </div>
+    </div>
+
+    <div class="editor-container">
+        <!-- Left Toolbar -->
+        <div class="toolbar glass-card">
+            <button class="tool-btn active" title="Cut"><i class="fas fa-cut"></i></button>
+            <button class="tool-btn" title="Text"><i class="fas fa-font"></i></button>
+            <button class="tool-btn" title="Stickers"><i class="fas fa-sticky-note"></i></button>
+            <button class="tool-btn" title="Music"><i class="fas fa-music"></i></button>
+            <button class="tool-btn" title="Filters"><i class="fas fa-sliders-h"></i></button>
+            <button class="tool-btn" title="Speed"><i class="fas fa-tachometer-alt"></i></button>
+            <button class="tool-btn" title="AI Tools"><i class="fas fa-robot"></i></button>
+        </div>
+
+        <!-- Center Preview -->
+        <div class="preview-area">
+            <div class="video-preview glass-card">
+                <video id="video-player" controls></video>
+            </div>
+            <div class="timeline glass-card">
+                <!-- Timeline tracks will be added here via JS -->
+                <div style="width: 2000px; height: 100px;"></div> <!-- Placeholder -->
+            </div>
+        </div>
+
+        <!-- Right Panel - AI Tools -->
+        <div class="right-panel glass-card" id="rightPanel">
+            <div class="panel-header">
+                <h2><i class="fas fa-robot"></i> AI Tools</h2>
+                <button class="secondary-btn" id="closePanelBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="tab-buttons">
+                <button class="tab-btn active">All Features</button>
+                <button class="tab-btn">Free</button>
+                <button class="tab-btn">Premium</button>
+            </div>
+
+            <div class="ai-features-list">
+                <!-- AI Auto-Captions -->
+                <div class="ai-feature premium">
+                    <h3><i class="fas fa-closed-captioning"></i> AI Auto-Captions</h3>
+                    <p>Automatically generate captions from speech with 95% accuracy.</p>
+                    <button class="ai-feature-btn premium">
+                        <i class="fas fa-crown"></i> Unlock with Pro
+                    </button>
+                </div>
+
+                <!-- AI Background Removal -->
+                <div class="ai-feature premium">
+                    <h3><i class="fas fa-image"></i> AI Green Screen</h3>
+                    <p>Remove or replace backgrounds automatically.</p>
+                    <button class="ai-feature-btn premium">
+                        <i class="fas fa-crown"></i> Unlock with Pro
+                    </button>
+                </div>
+
+                <!-- AI Style Transfer -->
+                <div class="ai-feature premium">
+                    <h3><i class="fas fa-paint-brush"></i> AI Style Transfer</h3>
+                    <p>Transform your video into anime, painting, or sketch style.</p>
+                    <button class="ai-feature-btn premium">
+                        <i class="fas fa-crown"></i> Unlock with Pro
+                    </button>
+                </div>
+
+                <!-- AI Smart Cut -->
+                <div class="ai-feature premium">
+                    <h3><i class="fas fa-brain"></i> AI Smart Cut</h3>
+                    <p>Automatically detect and keep the best moments.</p>
+                    <button class="ai-feature-btn premium">
+                        <i class="fas fa-crown"></i> Unlock with Pro
+                    </button>
+                </div>
+
+                <!-- Basic Filters (Free) -->
+                <div class="ai-feature">
+                    <h3><i class="fas fa-sliders-h"></i> Basic Filters</h3>
+                    <p>Apply 10+ color filters to enhance your video.</p>
+                    <button class="ai-feature-btn">
+                        <i class="fas fa-play"></i> Try Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle Dark/Light Mode
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            themeToggle.innerHTML = document.body.classList.contains('dark-mode') 
+                ? '<i class="fas fa-sun"></i>' 
+                : '<i class="fas fa-moon"></i>';
+        });
+
+        // Toggle Right Panel (Mobile)
+        const rightPanel = document.getElementById('rightPanel');
+        const closePanelBtn = document.getElementById('closePanelBtn');
+        const toolButtons = document.querySelectorAll('.tool-btn');
+
+        toolButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                toolButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Show AI Tools panel when AI button clicked
+                if (btn.querySelector('.fa-robot')) {
+                    rightPanel.classList.add('active');
+                }
+            });
+        });
+
+        closePanelBtn.addEventListener('click', () => {
+            rightPanel.classList.remove('active');
+        });
+
+        // Simulate Premium Upgrade
+        const upgradeBtn = document.getElementById('upgradeBtn');
+        upgradeBtn.addEventListener('click', () => {
+            alert('🚀 Upgrade to Pro to unlock all AI features!\n\n✅ AI Captions\n✅ Green Screen\n✅ 4K Export\n✅ No Watermark');
+        });
+
+        // Coming Soon: Actual Video Processing
+        console.log("AI Video Editor Loaded!");
+    </script>
+</body>
+</html>
